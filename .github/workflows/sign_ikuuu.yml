@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # ✅ 强制设置时区为 北京时间
+      # ✅ 正确设置北京时间
       - name: Set timezone to Asia/Shanghai
         uses: szenius/set-timezone@v2.0
         with:
@@ -24,12 +24,15 @@ jobs:
         with:
           python-version: '3.11'
 
+      # ✅ 安装所有依赖（包括企业微信库，防止报错）
       - name: Install dependencies
         run: |
           pip install requests
           pip install playwright
+          pip install git+https://github.com/qqhsx/my-utils.git
           playwright install chromium
 
+      # ✅ 运行签到 + 钉钉推送
       - name: Run sign-in + 钉钉推送
         env:
           ACCOUNTS: ${{ secrets.ACCOUNTS }}
