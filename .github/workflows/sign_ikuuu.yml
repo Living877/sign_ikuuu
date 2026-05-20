@@ -2,7 +2,7 @@ name: Auto Sign-in for BBS
 
 on:
   schedule:
-    - cron: '10 23 * * *'
+    - cron: '0 0 * * *'  # 北京时间 早上8点
   workflow_dispatch:
 
 jobs:
@@ -22,17 +22,15 @@ jobs:
         run: |
           pip install requests
           pip install playwright
-          pip install git+https://github.com/qqhsx/my-utils.git
-
-      # 安装 Chromium 浏览器
-      - name: Install Playwright Browsers
-        run: |
           playwright install chromium
 
-      - name: Run sign-in script
+      - name: Run sign-in + 钉钉推送
         env:
           ACCOUNTS: ${{ secrets.ACCOUNTS }}
-          WX_CORPID: ${{ secrets.WX_CORPID }}
-          WX_CORPSECRET: ${{ secrets.WX_CORPSECRET }}
-          WX_AGENTID: ${{ secrets.WX_AGENTID }}
-        run: python sign_ikuuu.py
+          DING_WEBHOOK: ${{ secrets.DING_WEBHOOK }}
+        run: |
+          python sign_ikuuu.py > result.log
+          content=$(cat result.log)
+          curl -X POST "$DING_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# iKuuu签到\n⏰时间：$(date +'%Y-%m-%d %H:%M:%S')\n📝结果：$content\"}}"
