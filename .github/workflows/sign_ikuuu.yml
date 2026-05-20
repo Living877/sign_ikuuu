@@ -1,45 +1,36 @@
-name: Auto Sign-in for BBS
-
+name: Auto Sign-in
 on:
   schedule:
-    - cron: '0 0 * * *'  # 北京时间 早上8点
+    - cron: 0 0 * * *
   workflow_dispatch:
 
 jobs:
-  sign_in_job:
+  sign:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      # ✅ 正确设置北京时间
-      - name: Set timezone to Asia/Shanghai
+      - name: 设定北京时间
         uses: szenius/set-timezone@v2.0
         with:
-          timezone: "Asia/Shanghai"
+          timezone: Asia/Shanghai
 
-      - name: Set up Python
+      - name: 配置Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: 3.11
 
-      # ✅ 安装所有依赖（包括企业微信库，防止报错）
-      - name: Install dependencies
+      - name: 安装依赖
         run: |
-          pip install requests
-          pip install playwright
-          pip install git+https://github.com/qqhsx/my-utils.git
+          pip install requests playwright
           playwright install chromium
 
-      # ✅ 运行签到 + 钉钉推送
-      - name: Run sign-in + 钉钉推送
+      - name: 执行签到+钉钉推送
         env:
           ACCOUNTS: ${{ secrets.ACCOUNTS }}
           DING_WEBHOOK: ${{ secrets.DING_WEBHOOK }}
         run: |
-          python sign_ikuuu.py > result.log
-          content=$(cat result.log)
-          curl -X POST "$DING_WEBHOOK" \
-          -H "Content-Type: application/json" \
-          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# iKuuu签到\\n⏰时间：$(date +'%Y-%m-%d %H:%M:%S')\\n📝结果：$content\"}}"
+          res=$(python sign_ikuuu.py)
+          curl -s -X POST "${DING_WEBHOOK}" \
+          -H "Content-Type:application/json" \
+          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# IKUUU自动签到通知\n🕒执行时间：$(date +'%Y-%m-%d %H:%M:%S')\n📋签到结果：\n$res\"}}"
