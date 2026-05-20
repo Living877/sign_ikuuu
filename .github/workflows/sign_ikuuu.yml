@@ -13,6 +13,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # ✅ 强制设置时区为 北京时间
+      - name: Set timezone to Asia/Shanghai
+        uses: szenius/set-timezone@v2.0
+        with:
+          timezone: "Asia/Shanghai"
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -33,4 +39,4 @@ jobs:
           content=$(cat result.log)
           curl -X POST "$DING_WEBHOOK" \
           -H "Content-Type: application/json" \
-          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# iKuuu签到\n⏰时间：$(date +'%Y-%m-%d %H:%M:%S')\n📝结果：$content\"}}"
+          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# iKuuu签到\\n⏰时间：$(date +'%Y-%m-%d %H:%M:%S')\\n📝结果：$content\"}}"
