@@ -1,8 +1,8 @@
 name: Auto Sign-in for BBS & IKUUU
 on:
   schedule:
-    - cron: '0 0 * * *'    # 原ikuu签到 每日0点
-    - cron: '10 23 * * *' # 原BBS签到 每日23:10
+    - cron: '0 0 * * *'    # 每日0点执行
+    - cron: '10 23 * * *' # 每日23:10执行
   workflow_dispatch:
 
 jobs:
@@ -32,16 +32,15 @@ jobs:
         run: |
           playwright install chromium
 
-      - name: Run sign-in script + 钉钉推送
+      - name: Run sign-in script + 钉钉推送（带错误日志）
         env:
           ACCOUNTS: ${{ secrets.ACCOUNTS }}
           DING_WEBHOOK: ${{ secrets.DING_WEBHOOK }}
-          WX_CORPID: ${{ secrets.WX_CORPID }}
-          WX_CORPSECRET: ${{ secrets.WX_CORPSECRET }}
-          WX_AGENTID: ${{ secrets.WX_AGENTID }}
         run: |
-          res=$(python sign_ikuuu.py)
-          # 钉钉推送
+          res=$(python sign_ikuuu.py 2> err.log)
+          echo "脚本标准输出：$res"
+          echo "脚本错误日志："
+          cat err.log
           curl -s -X POST "${DING_WEBHOOK}" \
           -H "Content-Type:application/json" \
-          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# IKUUU自动签到通知\n🕒执行时间：$(date +'%Y-%m-%d %H:%M:%S')\n📋签到结果：\n$res\"}}"
+          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# IKUUU自动签到通知\n🕒执行时间：$(date +'%Y-%m-%d %H:%M:%S')\n📋签到结果：\n$res\n❌脚本错误日志：\n$(cat err.log)\"}}"
