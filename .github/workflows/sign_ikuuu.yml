@@ -1,8 +1,8 @@
 name: Auto Sign-in for BBS & IKUUU
 on:
   schedule:
-    - cron: '0 0 * * *'    # 每日0点执行
-    - cron: '10 23 * * *' # 每日23:10执行
+    - cron: '0 0 * * *'
+    - cron: '10 23 * * *'
   workflow_dispatch:
 
 jobs:
@@ -27,12 +27,11 @@ jobs:
           pip install requests playwright
           pip install git+https://github.com/qqhsx/my-utils.git
 
-      # 安装 Chromium 浏览器
       - name: Install Playwright Browsers
         run: |
           playwright install chromium
 
-      - name: Run sign-in script + 钉钉推送（脚本失败也会推送）
+      - name: Run sign-in script + 钉钉推送
         env:
           ACCOUNTS: ${{ secrets.ACCOUNTS }}
           DING_WEBHOOK: ${{ secrets.DING_WEBHOOK }}
@@ -46,4 +45,5 @@ jobs:
           cat err.log
           curl -s -X POST "${DING_WEBHOOK}" \
           -H "Content-Type:application/json" \
-          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# IKUUU自动签到通知\n🕒执行时间：$(date +'%Y-%m-%d %H:%M:%S')\n📋签到结果：\n$res\n❌脚本错误日志：\n$(cat err.log)\n🔙脚本退出码：$ret_code\"}}"
+          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# IKUUU自动签到通知\n🕒执行时间：$(date +'%Y-%m-%d %H:%M:%S')\n📋签到结果：\n$res\n🔙脚本退出码：$ret_code\"}}" \
+          || true
