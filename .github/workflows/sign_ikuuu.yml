@@ -32,15 +32,18 @@ jobs:
         run: |
           playwright install chromium
 
-      - name: Run sign-in script + 钉钉推送（带错误日志）
+      - name: Run sign-in script + 钉钉推送（脚本失败也会推送）
         env:
           ACCOUNTS: ${{ secrets.ACCOUNTS }}
           DING_WEBHOOK: ${{ secrets.DING_WEBHOOK }}
         run: |
+          set +e
           res=$(python sign_ikuuu.py 2> err.log)
+          ret_code=$?
+          echo "脚本退出码：$ret_code"
           echo "脚本标准输出：$res"
           echo "脚本错误日志："
           cat err.log
           curl -s -X POST "${DING_WEBHOOK}" \
           -H "Content-Type:application/json" \
-          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# IKUUU自动签到通知\n🕒执行时间：$(date +'%Y-%m-%d %H:%M:%S')\n📋签到结果：\n$res\n❌脚本错误日志：\n$(cat err.log)\"}}"
+          -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"# IKUUU自动签到通知\n🕒执行时间：$(date +'%Y-%m-%d %H:%M:%S')\n📋签到结果：\n$res\n❌脚本错误日志：\n$(cat err.log)\n🔙脚本退出码：$ret_code\"}}"
